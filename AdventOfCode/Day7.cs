@@ -9,7 +9,6 @@
         public async Task<string> Solution()
         {
             var input = await _http.GetStringAsync("/2021/day/7/input");
-            //var input = "16,1,2,0,4,2,7,1,2,14";
             var numbers = input.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(n => int.Parse(n));
 
             var fuelAmount = new Dictionary<int, int>();
