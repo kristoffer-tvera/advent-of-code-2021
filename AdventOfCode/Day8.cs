@@ -8,8 +8,7 @@
 
         public async Task<string> Solution()
         {
-            //var input = await _http.GetStringAsync("/2021/day/8/input");
-            var input = "be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb |fdgacbe cefdb cefbgd gcbe\nedbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec |fcgedb cgb dgebacf gc\nfgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef |cg cg fdcagb cbg\nfbegcd cbd adcefb dageb afcb bc aefdc ecdab fgdeca fcdbega |efabcd cedba gadfec cb\naecbfdg fbg gf bafeg dbefa fcge gcbea fcaegb dgceab fcbdga |gecf egdcabf bgf bfgea\nfgeab ca afcebg bdacfeg cfaedg gcfdb baec bfadeg bafgc acf |gebdcfa ecba ca fadegcb\ndbcfg fgd bdegcaf fgec aegbdf ecdfab fbedc dacgb gdcebf gf |cefg dcbef fcge gbcadfe\nbdfegc cbegaf gecbf dfcage bdacg ed bedf ced adcbefg gebcd |ed bcgafe cdgba cbgef\negadfb cdbfeg cegd fecab cgb gbdefca cg fgcdab egfdb bfceg |gbdfcae bgc cg cgb\ngcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc |fgae cfgab fg bagce";
+            var input = await _http.GetStringAsync("/2021/day/8/input");
 
             var data = new List<(string[] signalPatterns, string[] outputValues)>();
             foreach(var line in input.Split('\n', StringSplitOptions.RemoveEmptyEntries))
@@ -29,39 +28,109 @@
                 part1Score += entry.outputValues.Count(c => c.Count() == 7); // 8
             }
 
-            var part2Score = "";
-            var alphabet = new char[] {'a', 'b', 'c', 'd', 'e', 'f', 'g'};
+            var part2Score = 0;
             foreach(var entry in data)
             {
-                var a = "";
-                var b = "";
-                var c = "";
-                var d = "";
-                var e = "";
-                var f = "";
-                var g = "";
+                var signalMap = SignalMapping(entry.signalPatterns);
+                var finalNumber = "";
 
-                var one = entry.signalPatterns.First(val => val.Count() == 2);
-                var seven = entry.signalPatterns.First(val => val.Count() == 3);
-                var four = entry.signalPatterns.First(val => val.Count() == 4);
-                var eight = entry.signalPatterns.First(val => val.Count() == 7);
-                //var zero = entry.signalPatterns.First(val => val.Count() == 6 && )
+                foreach (var outputValue in entry.outputValues)
+                {
+                    var signal = string.Join("", outputValue.Select(c => signalMap[c]));
 
-                var zeroSixNine = entry.signalPatterns.Where(val => val.Count() == 6).SelectMany(str => str.ToCharArray()).Distinct();
-                var zeroSixNineWhiteSpaces = alphabet.Except(zeroSixNine);
+                    var currentNumber = OutputValue(signal);
+                    finalNumber += currentNumber;
+                }
 
-                a = seven.Intersect(four).ToString();
-                c = zeroSixNineWhiteSpaces.Union(one).First().ToString();
-                f = one.Except(c).First().ToString();
-
-                var six = entry.signalPatterns.First(val => val.Count() == 6 && !c.Contains(c));
-
-
+                part2Score += int.Parse(finalNumber);
             }
-
 
             return $"Part 1: {part1Score}, Part 2: {part2Score}";
 
+        }
+
+        /// <summary>
+        /// Key-value mapping where input-char becomes key, and actual char becomes value
+        /// </summary>
+        /// <param name="entry"></param>
+        /// <returns></returns>
+        private Dictionary<char, char> SignalMapping(string[] entry)
+        {
+            var alphabet = new char[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g' };
+            var map = new Dictionary<char, char>();
+
+            var one = entry.Single(val => val.Count() == 2);
+            var seven = entry.Single(val => val.Count() == 3);
+            var four = entry.Single(val => val.Count() == 4);
+            var eight = entry.Single(val => val.Count() == 7);
+
+            var zeroSixNine = entry.Where(val => val.Count() == 6);
+            var zeroSixNineWhiteSpace = new List<char>();
+            foreach(var num in zeroSixNine)
+            {
+                zeroSixNineWhiteSpace.Add(alphabet.Except(num).Single());
+            }
+
+            var a = seven.Except(four).Single().ToString();
+            var c = zeroSixNineWhiteSpace.Intersect(one.ToCharArray()).Single().ToString();
+            var f = one.Except(c).Single().ToString();
+
+            var six = entry.Single(val => val.Count() == 6 && !val.Contains(c));
+            var two = entry.Single(val => !val.Contains(f));
+            var five = entry.Single(val => val.Count() == 5 && !val.Contains(c));
+            var e = alphabet.Except(five.ToCharArray()).Except(c).Single().ToString();
+
+            var nine = entry.Single(val => val.Count() == 6 && !val.Contains(e));
+            var three = entry.Single(val => val.Count() == 5 && val.Contains(c) && !val.Contains(e));
+            var zero = entry.Single(val => val.Count() == 6 && val != nine && val != six);
+
+            var d = alphabet.Except(zero.ToCharArray()).Single().ToString();
+            var b = alphabet.Except(two.ToCharArray()).Except(f).Single().ToString();
+            var g = alphabet.Except(a).Except(b).Except(c).Except(d).Except(e).Except(f).Single().ToString();
+            
+            map.Add(a[0], 'a');
+            map.Add(b[0], 'b');
+            map.Add(c[0], 'c');
+            map.Add(d[0], 'd');
+            map.Add(e[0], 'e');
+            map.Add(f[0], 'f');
+            map.Add(g[0], 'g');
+            return map;
+        }
+        
+        /// <summary>
+        /// Sort the input string, and output the corresponding digit
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        private string OutputValue(string input)
+        {
+            switch(string.Join("", input.OrderBy(c => c)))
+            {
+                case "abcefg":
+                    return "0";
+                case "cf":
+                    return "1";
+                case "acdeg":
+                    return "2";
+                case "acdfg":
+                    return "3";
+                case "bcdf":
+                    return "4";
+                case "abdfg":
+                    return "5";
+                case "abdefg":
+                    return "6";
+                case "acf":
+                    return "7";
+                case "abcdefg":
+                    return "8";
+                case "abcdfg":
+                    return "9";
+                default:
+                    throw new NotImplementedException();
+            }
         }
     }
 }
