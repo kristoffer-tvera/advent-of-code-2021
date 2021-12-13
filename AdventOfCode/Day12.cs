@@ -8,9 +8,7 @@
 
         public async Task<string> Solution()
         {
-            //var input = await _http.GetStringAsync("/2021/day/12/input");
-            var input = "start-A\nstart-b\nA-c\nA-b\nb-d\nA-end\nb-end";
-            //var input = "fs-end\nhe-DX\nfs-he\nstart-DX\npj-DX\nend-zg\nzg-sl\nzg-pj\npj-he\nRW-he\nfs-DX\npj-RW\nzg-RW\nstart-pj\nhe-WI\nzg-he\npj-fs\nstart-RW";
+            var input = await _http.GetStringAsync("/2021/day/12/input");
             var lines = input.Split('\n', StringSplitOptions.RemoveEmptyEntries);
             var caves = new List<Cave>();
 
@@ -41,7 +39,6 @@
             cavesVisited.Add(cave);
             if (cave.Name == "end")
             {
-                Console.WriteLine(string.Join(',', cavesVisited.Select(c => c.Name)));
                 return 1;
             };
 
@@ -64,7 +61,6 @@
             cavesVisited.Add(cave);
             if (cave.Name == "end")
             {
-                Console.WriteLine(string.Join(',', cavesVisited.Select(c => c.Name)));
                 return 1;
             };
 
@@ -72,7 +68,7 @@
             for (int i = 0; i < cave.ConnectingCaves.Count; i++)
             {
                 if (cave.ConnectingCaves[i].StartCave) continue;
-                if (CustomRules(cavesVisited, cave.ConnectingCaves[i])) continue;
+                if (CaveShouldBeSkipped(cavesVisited, cave.ConnectingCaves[i])) continue;
 
                 var newCavesVisited = new List<Cave>();
                 newCavesVisited.AddRange(cavesVisited);
@@ -82,24 +78,29 @@
             return score;
         }
 
-        private bool CustomRules(List<Cave> cavesVisited, Cave cave)
+        private bool CaveShouldBeSkipped(List<Cave> cavesVisited, Cave cave)
         {
             if (!cave.SmallCave) return false;
+            if (!cavesVisited.Any(c => c.Name == cave.Name)) return false;
+
             var currentCaveCount = cavesVisited.Count(c => c.Name == cave.Name);
+            if (currentCaveCount == 2) return true;
 
-
-            var relevantCaves = cavesVisited
-                .Where(c => c.Name == cave.Name)
+            var otherSmallCaves = cavesVisited
+                .Where(c => c.Name != cave.Name)
                 .Where(c => c.SmallCave);
 
-            if (!relevantCaves.Any()) return false;
-
-            var maxCount = relevantCaves
+            if (otherSmallCaves.Any())
+            {
+                var maxCount = otherSmallCaves
                 .GroupBy(c => c.Name)
                 .Max(group => group.Count());
 
+                if (currentCaveCount == 2 && maxCount == 1) return false;
+                if (currentCaveCount == 1 && maxCount == 2) return true;
+            }
+
             if (currentCaveCount == 1) return false;
-            if (currentCaveCount == 2 && maxCount == 1) return false;
 
             return true;
         }

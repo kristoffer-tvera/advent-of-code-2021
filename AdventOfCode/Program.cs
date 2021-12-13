@@ -16,6 +16,8 @@ var day9 = new Day9(builder.Configuration);
 var day10 = new Day10(builder.Configuration);
 var day11 = new Day11(builder.Configuration);
 var day12 = new Day12(builder.Configuration);
+var day13 = new Day13(builder.Configuration);
+var day14 = new Day14(builder.Configuration);
 
 var results = new Dictionary<string, string>();
 //results.Add("Day1", await day1.Solution());
@@ -29,7 +31,9 @@ var results = new Dictionary<string, string>();
 //results.Add("Day9", await day9.Solution());
 //results.Add("Day10", await day10.Solution());
 //results.Add("Day11", await day11.Solution());
-results.Add("Day12", await day12.Solution());
+//results.Add("Day12", await day12.Solution());
+//results.Add("Day13", await day13.Solution());
+results.Add("Day14", await day14.Solution());
 
 app.MapGet("/", () => "Hello World!\n" + string.Join("\n", results.Select(dict => $"{dict.Key}: {dict.Value}")));
 
